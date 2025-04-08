@@ -1,10 +1,10 @@
-# ⏱️ TimeTrackr
+# ⏱ TimeTrackr
 
 A simple, full-stack micro-SaaS tool for freelancers to track their time, manage clients, and generate invoices — built with **Spring Boot + React**.
 
 ---
 
-## 🚀 Features
+## Features
 
 - User authentication (JWT-based)
 - Add clients
@@ -15,7 +15,7 @@ A simple, full-stack micro-SaaS tool for freelancers to track their time, manage
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer       | Tech                      |
 |-------------|---------------------------|
@@ -26,7 +26,7 @@ A simple, full-stack micro-SaaS tool for freelancers to track their time, manage
 
 ---
 
-## 📦 Project Structure
+##  Project Structure
 timetrackr/
 ├── backend/ (Spring Boot app)
 ├── frontend/ (React + Vite + Tailwind)
@@ -34,7 +34,7 @@ timetrackr/
 
 ---
 
-## 🔧 Running Locally
+##  Running Locally
 
 ### 1. Start Backend
 
@@ -50,3 +50,16 @@ npm install
 npm run dev
 
 Frontend runs on http://localhost:5173
+
+
+ Next Steps (Planned)
+	•	Dashboard to view time entries
+	•	Create and download invoice PDFs
+	•	Email invoice to client
+	•	User profile and settings page
+	•	Add support for rates and currencies
+	•	Deploy to Render / Vercel
+
+
+ Contact
+Made with ❤️ by Swarnalatha Swaminathan
