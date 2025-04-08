@@ -11,12 +11,15 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      console.log("🔁 Sending login request", email, password);
       const res = await axios.post("/auth/login", { email, password });
+      console.log("✅ Login response:", res.data);
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userId", res.data.userId);
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
-      setError("Invalid email or password");
+      setError("LoginPage Invalid email or password");
     }
   };
 
