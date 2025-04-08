@@ -51,6 +51,22 @@ npm run dev
 
 Frontend runs on http://localhost:5173
 
+## ✅ Login Flow
+- Users can register and login using email/password
+- Passwords are securely hashed with BCrypt
+- JWT token is issued on successful login
+- Token is used for authenticated API requests
+- CORS enabled for frontend integration
+
+### Endpoints
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+
+### Tech Stack
+- Spring Boot
+- Spring Security
+- JWT (io.jsonwebtoken)
+- H2 DB (dev)
 
  Next Steps (Planned)
 	•	Dashboard to view time entries
