@@ -36,11 +36,15 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody AuthRequest request) {
+    	System.out.println("📲 AuthController: trying to authenticate " + request.getEmail());
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-        String token = jwtUtil.generateToken(request.getEmail());
-        return new AuthResponse(token);
+        User user = userService.findByEmail(request.getEmail());
+        String token = jwtUtil.generateToken(user.getEmail());
+
+        return new AuthResponse(token, user.getId());
     }
 }
 

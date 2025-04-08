@@ -25,6 +25,7 @@ public class UserService {
     }
 
     public User findByEmail(String email) {
+        System.out.println("Looking for user with email: [" + email + "]");
         return userRepository.findByEmail(email.trim());
     }
 }

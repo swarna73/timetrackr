@@ -5,28 +5,19 @@ import lombok.*;
 
 
 	@Data
+		public class AuthResponse {
+		    private String token;
+		    private Long userId;
 
-	public class AuthResponse {
-	    private String token;
+		    public AuthResponse() {}
 
-	    public AuthResponse() {}
+		    public AuthResponse(String token, Long userId) {
+		        this.token = token;
+		        this.userId = userId;
+		    }
 
-	    public AuthResponse(String token) {
-	        this.token = token;
-	    }
-
-	    
-		public String getToken() {
-			return token;
-		}
-
-		public void setToken(String token) {
-			this.token = token;
-		}
-	    
-	    
-	
-	    
+		    // getters/setters
+		
 	    
 	    
 }
