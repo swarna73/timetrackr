@@ -1,5 +1,6 @@
 package com.timetrackr.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,10 +34,11 @@ public class AuthController {
     public User register(@RequestBody User user) {
         return userService.save(user);
     }
+    
+    @PostMapping(value = "/login", produces = "application/json")
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+        System.out.println("📲 AuthController: trying to authenticate " + request.getEmail());
 
-    @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest request) {
-    	System.out.println("📲 AuthController: trying to authenticate " + request.getEmail());
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -44,7 +46,7 @@ public class AuthController {
         User user = userService.findByEmail(request.getEmail());
         String token = jwtUtil.generateToken(user.getEmail());
 
-        return new AuthResponse(token, user.getId());
+        return ResponseEntity.ok(new AuthResponse(token, user.getId()));
     }
 }
 

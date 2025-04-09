@@ -1,6 +1,8 @@
 package com.timetrackr.config;
 
 import com.timetrackr.repository.UserRepository;
+import com.timetrackr.security.JwtAuthenticationFilter;
+import com.timetrackr.util.JwtUtil;
 import com.timetrackr.model.User;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +15,7 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -24,18 +27,18 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final UserRepository userRepository;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // ✅ Constructor injection
-    public SecurityConfig(UserRepository userRepository) {
-        System.out.println("✅ SecurityConfig loaded");
+    public SecurityConfig(UserRepository userRepository, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userRepository = userRepository;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
+ 
     @Primary
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder encoder, UserDetailsService userDetailsService) 
@@ -69,14 +72,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
     	http.cors().and() // 👈 Add this line
         .csrf().disable()
         .headers().frameOptions().disable()
         .and()
         .authorizeHttpRequests()
         .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
-        .anyRequest().authenticated();
+        .anyRequest().authenticated()
+        .and()
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // ✅ this is
         return http.build();
     }
     
