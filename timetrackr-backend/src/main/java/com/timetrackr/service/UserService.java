@@ -3,6 +3,8 @@ package com.timetrackr.service;
 import com.timetrackr.model.User;
 import com.timetrackr.repository.UserRepository;
 
+import java.util.Optional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,5 +29,10 @@ public class UserService {
     public User findByEmail(String email) {
         System.out.println("Looking for user with email: [" + email + "]");
         return userRepository.findByEmail(email.trim());
+    }
+    
+    public User findById(Long id) {
+        return userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
     }
 }

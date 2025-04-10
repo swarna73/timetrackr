@@ -24,4 +24,9 @@ public class ClientController {
     public List<Client> getClientsByUser(@PathVariable Long userId) {
         return clientService.findByUserId(userId);
     }
+    
+    @GetMapping
+    public List<Client> getAllClients() {
+        return clientService.findAll();
+    }
 }
