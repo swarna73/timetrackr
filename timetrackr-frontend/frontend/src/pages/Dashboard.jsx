@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "../api/axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ClientManager from "../components/ClientManager";
 
 function Dashboard() {
   const [description, setDescription] = useState("");
@@ -11,17 +12,22 @@ function Dashboard() {
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState("");
   const userId = localStorage.getItem("userId");
+  const [showClientManager, setShowClientManager] = useState(false);
+
 
   // Fetch entries
   useEffect(() => {
     async function fetchEntries() {
       try {
         const res = await axios.get(`/time-entries/user/${userId}`);
-        setEntries(res.data);
-      } catch (err) {
-        console.error("❌ Failed to fetch time entries:", err.message);
-      }
-    }
+	   const sorted = res.data.sort((a, b) =>
+      a.date > b.date ? -1 : 1 // latest first, or reverse if needed
+       );
+         setEntries(sorted);
+  }        catch (err) {
+             console.error("❌ Failed to fetch time entries:", err.message);
+  }     
+}
 
     if (userId) fetchEntries();
   }, [userId]);
@@ -31,12 +37,16 @@ function Dashboard() {
     async function fetchClients() {
       try {
         const res = await axios.get(`/clients/user/${userId}`);
-        console.log("✅ Clients fetched:", res.data);
-        setClients(res.data);
-      } catch (err) {
-        console.error("❌ Failed to fetch clients:", err.message);
-      }
+     // Sort alphabetically by name before setting state
+      const sortedClients = res.data.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
+      setClients(sortedClients);
+    } catch (err) {
+      console.error("❌ Failed to fetch clients:", err.message);
     }
+  }
+
 
     if (userId) fetchClients();
   }, [userId]);
@@ -77,6 +87,13 @@ function Dashboard() {
       <ToastContainer />
       <div className="p-6 max-w-xl mx-auto">
         <h2 className="text-2xl font-bold mb-4">Your Time Entries</h2>
+  <button
+  onClick={() => setShowClientManager((prev) => !prev)}
+  className="mb-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+   >
+  {showClientManager ? "Hide Client Manager" : "Manage Clients"}
+   </button>
+      {showClientManager && <ClientManager />}
 
         <form onSubmit={handleAddEntry} className="space-y-4 mb-6">
           <input
