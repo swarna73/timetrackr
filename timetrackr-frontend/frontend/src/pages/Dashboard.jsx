@@ -29,11 +29,6 @@ function Dashboard() {
       console.error("❌ Failed to fetch time entries:", err.message);
     }
   };
-const hoursPerClient = entries.reduce((acc, entry) => {
-  const clientName = entry.client?.name || "Unknown Client";
-  acc[clientName] = (acc[clientName] || 0) + entry.duration;
-  return acc;
-}, {});
 
   const fetchClients = async () => {
     try {
@@ -60,9 +55,10 @@ const hoursPerClient = entries.reduce((acc, entry) => {
       setDuration("");
       setDate("");
       setSelectedClientId("");
-      toast.success("✅ Time entry added successfully!");
-      autoClose: 3000; // closes after 3 seconds
-      hideProgressBar: true;
+      toast.success("✅ Time entry added successfully!", {
+        autoClose: 3000,
+        hideProgressBar: true,
+      });
     } catch (err) {
       toast.error("❌ Failed to add time entry");
       console.error("❌ Failed to add time entry:", err.message);
@@ -74,6 +70,14 @@ const hoursPerClient = entries.reduce((acc, entry) => {
     duration > 0 &&
     date !== "" &&
     selectedClientId !== "";
+
+  const hoursByClient = entries.reduce((acc, entry) => {
+    const clientName = entry.client?.name || "Unknown";
+    acc[clientName] = (acc[clientName] || 0) + entry.duration;
+    return acc;
+  }, {});
+
+  const maxHours = Math.max(...Object.values(hoursByClient), 1);
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
@@ -148,35 +152,28 @@ const hoursPerClient = entries.reduce((acc, entry) => {
             </p>
           )}
 
-          {entries.length === 0 ? (
-            <p className="text-gray-500">No time entries found.</p>
-          ) : (
-            <div className="space-y-3">
-              {entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="border p-3 rounded bg-white shadow-sm"
-                >
-                  <strong>{entry.client?.name || "Unknown Client"}</strong> –{" "}
-                  {entry.duration} hrs on {entry.date}
-                </div>
-              ))}
+          {Object.entries(hoursByClient).length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-bold mb-2">Summary</h3>
+              <div className="space-y-2">
+                {Object.entries(hoursByClient).map(([clientName, total]) => {
+                  const percent = (total / maxHours) * 100;
+                  return (
+                    <div key={clientName} className="flex items-center space-x-4">
+                      <span className="w-32">{clientName}</span>
+                      <div className="flex-1 bg-gray-200 rounded">
+                        <div
+                          className="bg-blue-600 h-4 rounded"
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                      </div>
+                      <span className="w-16 text-right text-gray-700">{total} hrs</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
-	 {Object.keys(hoursPerClient).length > 0 && (
-  <div className="mt-6">
-    <h3 className="text-lg font-medium mb-2">Summary</h3>
-    <ul className="space-y-1 text-gray-700">
-      {Object.entries(hoursPerClient).map(([client, total]) => (
-        <li key={client}>
-          <strong>{client}</strong> – {total} hrs
-        </li>
-      ))}
-    </ul>
-  </div>
-)}
-
-
         </>
       )}
     </div>
@@ -184,3 +181,4 @@ const hoursPerClient = entries.reduce((acc, entry) => {
 }
 
 export default Dashboard;
+
