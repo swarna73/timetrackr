@@ -29,6 +29,11 @@ function Dashboard() {
       console.error("❌ Failed to fetch time entries:", err.message);
     }
   };
+const hoursPerClient = entries.reduce((acc, entry) => {
+  const clientName = entry.client?.name || "Unknown Client";
+  acc[clientName] = (acc[clientName] || 0) + entry.duration;
+  return acc;
+}, {});
 
   const fetchClients = async () => {
     try {
@@ -158,6 +163,20 @@ function Dashboard() {
               ))}
             </div>
           )}
+	 {Object.keys(hoursPerClient).length > 0 && (
+  <div className="mt-6">
+    <h3 className="text-lg font-medium mb-2">Summary</h3>
+    <ul className="space-y-1 text-gray-700">
+      {Object.entries(hoursPerClient).map(([client, total]) => (
+        <li key={client}>
+          <strong>{client}</strong> – {total} hrs
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
+
         </>
       )}
     </div>
