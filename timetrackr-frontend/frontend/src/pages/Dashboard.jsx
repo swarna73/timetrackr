@@ -8,66 +8,40 @@ function Dashboard() {
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("");
   const [date, setDate] = useState("");
+  const [selectedClientId, setSelectedClientId] = useState("");
   const [entries, setEntries] = useState([]);
   const [clients, setClients] = useState([]);
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const userId = localStorage.getItem("userId");
   const [showClientManager, setShowClientManager] = useState(false);
+  const userId = localStorage.getItem("userId");
 
-  const isFormValid =
-    description.trim() !== "" &&
-    duration > 0 &&
-    date !== "" &&
-    selectedClientId !== "";
-
-
-  // Fetch entries
   useEffect(() => {
-    async function fetchEntries() {
-      try {
-        const res = await axios.get(`/time-entries/user/${userId}`);
-	   const sorted = res.data.sort((a, b) =>
-      a.date > b.date ? -1 : 1 // latest first, or reverse if needed
-       );
-         setEntries(sorted);
-  }        catch (err) {
-             console.error("❌ Failed to fetch time entries:", err.message);
-  }     
-}
-
-    if (userId) fetchEntries();
+    if (!userId) return;
+    fetchEntries();
+    fetchClients();
   }, [userId]);
 
-  // Fetch clients
-  useEffect(() => {
-    async function fetchClients() {
-      try {
-        const res = await axios.get(`/clients/user/${userId}`);
-     // Sort alphabetically by name before setting state
-      const sortedClients = res.data.sort((a, b) =>
-        a.name.localeCompare(b.name)
-      );
-      setClients(sortedClients);
+  const fetchEntries = async () => {
+    try {
+      const res = await axios.get(`/time-entries/user/${userId}`);
+      const sorted = res.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setEntries(sorted);
+    } catch (err) {
+      console.error("❌ Failed to fetch time entries:", err.message);
+    }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const res = await axios.get(`/clients/user/${userId}`);
+      const sorted = res.data.sort((a, b) => a.name.localeCompare(b.name));
+      setClients(sorted);
     } catch (err) {
       console.error("❌ Failed to fetch clients:", err.message);
     }
-  }
+  };
 
-
-    if (userId) fetchClients();
-  }, [userId]);
-
-  // Add entry
   const handleAddEntry = async (e) => {
     e.preventDefault();
-    console.log("Submitting entry:", {
-      description,
-      duration,
-      date,
-      userId,
-      clientId: selectedClientId,
-    });
-
     try {
       const res = await axios.post("/time-entries", {
         description,
@@ -82,87 +56,111 @@ function Dashboard() {
       setDate("");
       setSelectedClientId("");
       toast.success("✅ Time entry added successfully!");
+      autoClose: 3000; // closes after 3 seconds
+      hideProgressBar: true;
     } catch (err) {
+      toast.error("❌ Failed to add time entry");
       console.error("❌ Failed to add time entry:", err.message);
-      toast.error("❌ Could not add entry.");
     }
   };
 
+  const isFormValid =
+    description.trim() !== "" &&
+    duration > 0 &&
+    date !== "" &&
+    selectedClientId !== "";
+
   return (
-    <>
+    <div className="p-6 max-w-2xl mx-auto">
       <ToastContainer />
-      <div className="p-6 max-w-xl mx-auto">
-        <h2 className="text-2xl font-bold mb-4">Your Time Entries</h2>
-  <button
-  onClick={() => setShowClientManager((prev) => !prev)}
-  className="mb-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-   >
-  {showClientManager ? "Hide Client Manager" : "Manage Clients"}
-   </button>
-      {showClientManager && <ClientManager />}
+      <h1 className="text-2xl font-bold mb-6">Your Time Entries</h1>
 
-        <form onSubmit={handleAddEntry} className="space-y-4 mb-6">
-          <input
-            type="text"
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full border p-2 rounded"
-            required
-          />
-          <input
-            type="number"
-            step="0.1"
-            placeholder="Duration (hrs)"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-            className="w-full border p-2 rounded"
-            required
-          />
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full border p-2 rounded"
-            required
-          />
+      <button
+        className="bg-gray-200 px-4 py-2 rounded mb-6"
+        onClick={() => setShowClientManager(!showClientManager)}
+      >
+        {showClientManager ? "Hide Client Manager" : "Manage Clients"}
+      </button>
 
-          <select
-            value={selectedClientId}
-            onChange={(e) => setSelectedClientId(e.target.value)}
-            className="w-full border p-2 rounded"
-            required
-          >
-            <option value="">Select Client</option>
-            {clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
-          </select>
-<button
-  type="submit"
-  disabled={!isFormValid}
-  className={`bg-blue-600 text-white px-4 py-2 rounded ${
-    !isFormValid ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
-  }`}
->
-  Add Entry
-</button>
-        </form>
+      {showClientManager ? (
+        <ClientManager
+          onClientAdded={(newClient) =>
+            setClients((prev) =>
+              [...prev, newClient].sort((a, b) => a.name.localeCompare(b.name))
+            )
+          }
+        />
+      ) : (
+        <>
+          {clients.length > 0 ? (
+            <form onSubmit={handleAddEntry} className="space-y-4 mb-6">
+              <input
+                type="text"
+                placeholder="Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full border p-2 rounded"
+              />
+              <input
+                type="number"
+                step="0.1"
+                placeholder="Duration (hrs)"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="w-full border p-2 rounded"
+              />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full border p-2 rounded"
+              />
+              <select
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="w-full border p-2 rounded"
+              >
+                <option value="">Select Client</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                disabled={!isFormValid}
+                className={`bg-blue-600 text-white px-4 py-2 rounded ${
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+                }`}
+              >
+                Add Entry
+              </button>
+            </form>
+          ) : (
+            <p className="text-gray-500">
+              You must add a client before logging time entries.
+            </p>
+          )}
 
-        {entries.length === 0 ? (
-          <p className="text-gray-500">No time entries found.</p>
-        ) : (
-          entries.map((entry) => (
-            <div key={entry.id} className="border p-2 rounded mb-2">
-              <strong>{entry.description}</strong> – {entry.duration} hrs on{" "}
-              {entry.date}
+          {entries.length === 0 ? (
+            <p className="text-gray-500">No time entries found.</p>
+          ) : (
+            <div className="space-y-3">
+              {entries.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="border p-3 rounded bg-white shadow-sm"
+                >
+                  <strong>{entry.client?.name || "Unknown Client"}</strong> –{" "}
+                  {entry.duration} hrs on {entry.date}
+                </div>
+              ))}
             </div>
-          ))
-        )}
-      </div>
-    </>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
