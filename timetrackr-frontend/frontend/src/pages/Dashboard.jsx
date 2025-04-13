@@ -14,6 +14,12 @@ function Dashboard() {
   const userId = localStorage.getItem("userId");
   const [showClientManager, setShowClientManager] = useState(false);
 
+  const isFormValid =
+    description.trim() !== "" &&
+    duration > 0 &&
+    date !== "" &&
+    selectedClientId !== "";
+
 
   // Fetch entries
   useEffect(() => {
@@ -134,13 +140,15 @@ function Dashboard() {
               </option>
             ))}
           </select>
-
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Add Entry
-          </button>
+<button
+  type="submit"
+  disabled={!isFormValid}
+  className={`bg-blue-600 text-white px-4 py-2 rounded ${
+    !isFormValid ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+  }`}
+>
+  Add Entry
+</button>
         </form>
 
         {entries.length === 0 ? (
