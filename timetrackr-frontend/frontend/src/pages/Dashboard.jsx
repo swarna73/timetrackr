@@ -3,6 +3,9 @@ import axios from "../api/axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ClientManager from "../components/ClientManager";
+import RegisterUserForm from "../components/RegisterUserForm";
+import jwt_decode from "jwt-decode";
+
 
 function Dashboard() {
   const [description, setDescription] = useState("");
@@ -78,19 +81,37 @@ function Dashboard() {
   }, {});
 
   const maxHours = Math.max(...Object.values(hoursByClient), 1);
+const token = localStorage.getItem("token");
+let userRole = null;
+
+if (token) {
+try {
+  const decoded = jwt_decode(token);
+  userRole = decoded.role;
+}
+catch (e) {
+    console.error("❌ Failed to decode JWT", e);
+  }
+}
+
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <ToastContainer />
       <h1 className="text-2xl font-bold mb-6">Your Time Entries</h1>
-
+ {userRole === "MANAGER" && (
+  <div className="mt-6">
+    <h2 className="text-xl font-semibold mb-2">Register New User</h2>
+    <RegisterUserForm />
+  </div>
+)}
       <button
         className="bg-gray-200 px-4 py-2 rounded mb-6"
         onClick={() => setShowClientManager(!showClientManager)}
       >
         {showClientManager ? "Hide Client Manager" : "Manage Clients"}
       </button>
-
+      {userRole === "MANAGER" && <RegisterUserForm />}
       {showClientManager ? (
         <ClientManager
           onClientAdded={(newClient) =>
