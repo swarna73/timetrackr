@@ -20,8 +20,8 @@ public class UserService {
 
     public User save(User user) {
     	System.out.println("Saving user email: [" + user.getEmail() + "]");
-    	user.setEmail(user.getEmail().trim()); // ✅ Trim email
-        user.setUsername(user.getUsername().trim()); // Optional: trim username too
+    	user.setEmail(user.getEmail().trim()); 
+        user.setUsername(user.getUsername().trim());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }

@@ -7,7 +7,9 @@ import com.timetrackr.model.User;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +23,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Collections;
+
+
 
 @Configuration
 @EnableWebSecurity
@@ -66,20 +70,23 @@ public class SecurityConfig {
             return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.emptyList()
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
             );
         };
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
-    	http.cors().and() // 👈 Add this line
+    	http.cors().and() 
         .csrf().disable()
         .headers().frameOptions().disable()
         .and()
         .authorizeHttpRequests()
+        .requestMatchers(HttpMethod.POST, "/api/auth/register").hasRole("MANAGER")
+        .requestMatchers("/api/clients/**").hasAnyRole("MANAGER", "USER")
+        .requestMatchers("/api/time-entries/**").authenticated()
         .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
-        .anyRequest().authenticated()
+        .anyRequest().denyAll()
         .and()
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // ✅ this is
         return http.build();

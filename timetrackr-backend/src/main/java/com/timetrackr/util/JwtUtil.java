@@ -6,20 +6,23 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.timetrackr.model.User;
+
 import java.util.Date;
 
 @Component
 public class JwtUtil {
     private final String SECRET = "secretkey123";
     private final long EXPIRATION_TIME = 86400000; // 1 day
-
-    public String generateToken(String email) {
+   
+    public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS512, SECRET)
-                .compact();
+            .setSubject(user.getEmail())
+            .claim("role", user.getRole().name()) // 👈 Add this
+            .setIssuedAt(new Date())
+            .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+            .signWith(SignatureAlgorithm.HS512, SECRET)
+            .compact();
     }
 
     public String extractUsername(String token) {
