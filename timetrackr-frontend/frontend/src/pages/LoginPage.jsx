@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -16,6 +17,9 @@ export default function LoginPage() {
       console.log("✅ Login response:", res.data);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userId", res.data.userId);
+     localStorage.setItem("role", decoded.role); 
+      const decoded = jwtDecode(token); // ✅
+      console.log(decoded.role); // ✅	
       navigate("/dashboard");
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);

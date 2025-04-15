@@ -3,9 +3,8 @@ import axios from "../api/axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ClientManager from "../components/ClientManager";
-import RegisterUserForm from "../components/RegisterUserForm";
-import jwt_decode from "jwt-decode";
-
+import RegisterUserForm from "../../src/pages/RegisterUserForm";
+import { jwtDecode } from "jwt-decode";
 
 function Dashboard() {
   const [description, setDescription] = useState("");
@@ -42,7 +41,7 @@ function Dashboard() {
       console.error("❌ Failed to fetch clients:", err.message);
     }
   };
-
+console.log("✅ Dashboard rendering");
   const handleAddEntry = async (e) => {
     e.preventDefault();
     try {
@@ -86,10 +85,12 @@ let userRole = null;
 
 if (token) {
 try {
-  const decoded = jwt_decode(token);
-  userRole = decoded.role;
+  const decoded = jwtDecode(token);
+  userRole = decoded.role || decoded.authorities?.[0]?.authority || null;
 }
-catch (e) {
+catch (e) { 
+      // ⛔ No token? Redirect to login
+      navigate("/login");
     console.error("❌ Failed to decode JWT", e);
   }
 }
