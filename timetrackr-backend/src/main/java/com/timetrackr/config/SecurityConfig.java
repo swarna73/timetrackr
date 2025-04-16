@@ -57,7 +57,6 @@ public class SecurityConfig {
             .build();
     }
 
-    // ✅ THE KEY PIECE
     @Bean
     public UserDetailsService userDetailsService() {
         return email -> {
@@ -82,7 +81,8 @@ public class SecurityConfig {
         .headers().frameOptions().disable()
         .and()
         .authorizeHttpRequests()
-        .requestMatchers(HttpMethod.POST, "/api/auth/register").hasRole("MANAGER")
+        //.requestMatchers(HttpMethod.POST, "/api/auth/register").hasRole("MANAGER")
+        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
         .requestMatchers("/api/clients/**").hasAnyRole("MANAGER", "USER")
         .requestMatchers("/api/time-entries/**").authenticated()
         .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()

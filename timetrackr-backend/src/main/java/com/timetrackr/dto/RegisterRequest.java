@@ -1,7 +1,11 @@
 package com.timetrackr.dto;
 
 import com.timetrackr.model.Role;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
 public class RegisterRequest {
 	
     private String username;

@@ -1,62 +1,77 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
-export default function LoginPage() {
+function LoginPage() {
   const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoginError("");
+
     try {
-      console.log("🔁 Sending login request", email, password);
-      const res = await axios.post("/auth/login", { email, password });
-      console.log("✅ Login response:", res.data);
-      localStorage.setItem("token", res.data.token);
+      const res = await axios.post("/auth/login", {
+        email,
+        password,
+      });
+
+      // ✅ Get token first
+      const token = res.data.token;
+
+      // ✅ Decode token
+      const decoded = jwtDecode(token);
+
+      // ✅ Store values in localStorage
+      localStorage.setItem("token", token);
       localStorage.setItem("userId", res.data.userId);
-     localStorage.setItem("role", decoded.role); 
-      const decoded = jwtDecode(token); // ✅
-      console.log(decoded.role); // ✅	
+      localStorage.setItem("role", decoded.role);
+
+      // ✅ Navigate to dashboard
       navigate("/dashboard");
-    } catch (err) {
-      console.error("Login error:", err.response?.data || err.message);
-      setError("LoginPage Invalid email or password");
+    } catch (error) {
+      console.error("Login error:", error);
+      setLoginError("LoginPage Invalid email or password");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="flex items-center justify-center h-screen bg-gray-100">
       <form
         onSubmit={handleLogin}
-        className="bg-white p-6 rounded shadow-md w-full max-w-sm"
+        className="bg-white p-8 rounded shadow-md w-full max-w-md"
       >
-        <h1 className="text-2xl font-bold mb-4 text-center">TimeTrackr Login</h1>
+        <h2 className="text-2xl font-bold mb-6 text-center">TimeTrackr Login</h2>
 
-        {error && (
-          <div className="text-red-500 text-sm mb-2">{error}</div>
+        {loginError && (
+          <p className="text-red-500 mb-4 text-center">{loginError}</p>
         )}
 
         <input
           type="email"
           placeholder="Email"
-          className="w-full mb-3 p-2 border rounded"
+          className="w-full mb-4 p-2 border rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
+
         <input
           type="password"
           placeholder="Password"
           className="w-full mb-4 p-2 border rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
         >
           Login
         </button>
@@ -64,3 +79,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default LoginPage;
