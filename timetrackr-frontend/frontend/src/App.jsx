@@ -3,56 +3,47 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import WelcomeRegister from "./pages/WelcomeRegister";
+import axios from "./api/axios";
 
 function App() {
-  const [bootstrapNeeded, setBootstrapNeeded] = useState(null); // initially unknown
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [bootstrapNeeded, setBootstrapNeeded] = useState(null); // null = loading
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    // 👇 Only fetch bootstrapNeeded once
-    const fetchBootstrapStatus = async () => {
-      try {
-        const res = await fetch("/api/auth/bootstrap-needed");
-        const data = await res.json();
-        setBootstrapNeeded(data); // true or false
-      } catch (err) {
-        console.error("Error checking bootstrap-needed:", err);
-        setBootstrapNeeded(false); // fallback
-      }
-    };
-
-    fetchBootstrapStatus();
+    axios.get("/auth/bootstrap-needed")
+      .then((res) => {
+        setBootstrapNeeded(res.data);
+      })
+      .catch((err) => {
+        console.error("Failed to check bootstrap state", err);
+        setBootstrapNeeded(false); // fallback to normal flow
+      });
   }, []);
 
-  // ✅ Track token from localStorage changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const storedToken = localStorage.getItem("token");
-      if (storedToken !== token) {
-        setToken(storedToken);
-      }
-    }, 500);
-    return () => clearInterval(interval);
-  }, [token]);
-
-  // 🕐 Show loading while bootstrap status is being checked
   if (bootstrapNeeded === null) {
-    return <div className="p-4 text-center">Loading...</div>;
+    // Optional: a loading state while we check
+    return <div className="text-center p-4">🔄 Checking setup...</div>;
   }
 
   return (
     <Router>
       <Routes>
-        {/* 👋 Show welcome-register if first-time setup */}
-        {bootstrapNeeded ? (
+        {/* 👋 Welcome setup flow */}
+        {bootstrapNeeded && (
+          <Route path="*" element={<WelcomeRegister />} />
+        )}
+
+        {/* 🔒 Authenticated flow */}
+        {!bootstrapNeeded && (
           <>
-            <Route path="/welcome-register" element={<WelcomeRegister />} />
-            <Route path="*" element={<Navigate to="/welcome-register" />} />
-          </>
-        ) : (
-          <>
-            <Route path="/" element={!token ? <LoginPage /> : <Navigate to="/dashboard" />} />
-            <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/" />} />
+            <Route
+              path="/"
+              element={!token ? <LoginPage /> : <Navigate to="/dashboard" />}
+            />
+            <Route
+              path="/dashboard"
+              element={token ? <Dashboard /> : <Navigate to="/" />}
+            />
             <Route path="/welcome-register" element={<Navigate to="/" />} />
           </>
         )}
