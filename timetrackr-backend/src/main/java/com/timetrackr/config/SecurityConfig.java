@@ -85,11 +85,14 @@ public class SecurityConfig {
         .requestMatchers("/api/clients/**").hasAnyRole("MANAGER", "USER")
         .requestMatchers("/api/time-entries/**").authenticated()
         .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
+        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+        .requestMatchers(HttpMethod.POST, "/api/auth/welcome-register").permitAll()
         .anyRequest().denyAll()
         .and()
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // ✅ this is
         return http.build();
     }
+    
     
     
     @Bean

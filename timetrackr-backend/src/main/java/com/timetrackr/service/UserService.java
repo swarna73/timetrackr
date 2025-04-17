@@ -1,5 +1,7 @@
 package com.timetrackr.service;
 
+import com.timetrackr.dto.RegisterRequest;
+import com.timetrackr.model.Role;
 import com.timetrackr.model.User;
 import com.timetrackr.repository.UserRepository;
 
@@ -34,5 +36,34 @@ public class UserService {
     public User findById(Long id) {
         return userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+    }
+    public boolean isBootstrapNeeded() {
+        return userRepository.count() == 0;
+    }
+
+    public void registerInitialManager(RegisterRequest request) {
+        if (!isBootstrapNeeded()) {
+            throw new IllegalStateException("Initial setup already complete");
+        }
+
+        User user = new User();
+        System.out.println("Saving first manager user: " + request.getEmail());
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.MANAGER); // 🚀 Force manager role
+
+        userRepository.save(user);
+    }
+    
+    public void register(RegisterRequest request) {
+        User newUser = User.builder()
+            .username(request.getUsername())
+            .email(request.getEmail())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .role(request.getRole())
+            .build();
+
+        userRepository.save(newUser);
     }
 }

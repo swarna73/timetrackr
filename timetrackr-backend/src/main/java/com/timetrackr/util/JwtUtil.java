@@ -33,6 +33,14 @@ public class JwtUtil {
                 .getSubject();
     }
     
+    public String extractRole(String token) {
+        return Jwts.parser()
+                .setSigningKey(SECRET)
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class); 
+    }
+    
     public boolean validateToken(String token, UserDetails userDetails) {
         try {
             String username = extractUsername(token);
