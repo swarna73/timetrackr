@@ -1,206 +1,189 @@
 import React, { useEffect, useState } from "react";
-import axios from "../api/axios";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import RegisterUserForm from "./RegisterUserForm";
 import ClientManager from "../components/ClientManager";
-import RegisterUserForm from "../../src/pages/RegisterUserForm";
-import { jwtDecode } from "jwt-decode";
+import axios from "../api/axios";
 
 function Dashboard() {
+  const [clients, setClients] = useState([]);
+  const [entries, setEntries] = useState([]);
+  const [showClientManager, setShowClientManager] = useState(false);
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("");
   const [date, setDate] = useState("");
-  const [selectedClientId, setSelectedClientId] = useState("");
-  const [entries, setEntries] = useState([]);
-  const [clients, setClients] = useState([]);
-  const [showClientManager, setShowClientManager] = useState(false);
-  const userId = localStorage.getItem("userId");
+  const [clientId, setClientId] = useState("");
+  const [userRole, setUserRole] = useState(localStorage.getItem("role"));
 
-  useEffect(() => {
-    if (!userId) return;
-    fetchEntries();
-    fetchClients();
-  }, [userId]);
-
-  const fetchEntries = async () => {
-    try {
-      const res = await axios.get(`/time-entries/user/${userId}`);
-      const sorted = res.data.sort((a, b) => new Date(b.date) - new Date(a.date));
-      setEntries(sorted);
-    } catch (err) {
-      console.error("❌ Failed to fetch time entries:", err.message);
-    }
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/";
   };
 
   const fetchClients = async () => {
     try {
-      const res = await axios.get(`/clients/user/${userId}`);
-      const sorted = res.data.sort((a, b) => a.name.localeCompare(b.name));
-      setClients(sorted);
+      const res = await axios.get("/clients/user/" + localStorage.getItem("userId"));
+      setClients(res.data);
     } catch (err) {
-      console.error("❌ Failed to fetch clients:", err.message);
+      console.error("Failed to fetch clients", err);
     }
   };
-console.log("✅ Dashboard rendering");
+
+  const fetchEntries = async () => {
+    try {
+      const res = await axios.get("/time-entries/user/" + localStorage.getItem("userId"));
+      setEntries(res.data);
+    } catch (err) {
+      console.error("Failed to fetch entries", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchClients();
+    fetchEntries();
+  }, []);
+
   const handleAddEntry = async (e) => {
     e.preventDefault();
+    if (!clientId) {
+      alert("Please select a client");
+      return;
+    }
+
     try {
       const res = await axios.post("/time-entries", {
         description,
         duration,
         date,
-        userId,
-        clientId: selectedClientId,
+        userId: localStorage.getItem("userId"),
+        clientId,
       });
-      setEntries([...entries, res.data]);
+
+      setEntries((prev) => [...prev, res.data]);
       setDescription("");
       setDuration("");
       setDate("");
-      setSelectedClientId("");
-      toast.success("✅ Time entry added successfully!", {
-        autoClose: 3000,
-        hideProgressBar: true,
-      });
+      setClientId("");
     } catch (err) {
-      toast.error("❌ Failed to add time entry");
-      console.error("❌ Failed to add time entry:", err.message);
+      console.error("Failed to add entry", err);
     }
   };
 
-  const isFormValid =
-    description.trim() !== "" &&
-    duration > 0 &&
-    date !== "" &&
-    selectedClientId !== "";
-
-  const hoursByClient = entries.reduce((acc, entry) => {
-    const clientName = entry.client?.name || "Unknown";
-    acc[clientName] = (acc[clientName] || 0) + entry.duration;
-    return acc;
-  }, {});
-
-  const maxHours = Math.max(...Object.values(hoursByClient), 1);
-const token = localStorage.getItem("token");
-let userRole = null;
-
-if (token) {
-try {
-  const decoded = jwtDecode(token);
-  userRole = decoded.role || decoded.authorities?.[0]?.authority || null;
-}
-catch (e) { 
-      // ⛔ No token? Redirect to login
-      navigate("/login");
-    console.error("❌ Failed to decode JWT", e);
-  }
-}
-
-
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <ToastContainer />
-      <h1 className="text-2xl font-bold mb-6">Your Time Entries</h1>
- {userRole === "MANAGER" && (
-  <div className="mt-6">
-    <h2 className="text-xl font-semibold mb-2">Register New User</h2>
-    <RegisterUserForm />
-  </div>
-)}
-      <button
-        className="bg-gray-200 px-4 py-2 rounded mb-6"
-        onClick={() => setShowClientManager(!showClientManager)}
-      >
-        {showClientManager ? "Hide Client Manager" : "Manage Clients"}
-      </button>
-      {userRole === "MANAGER" && <RegisterUserForm />}
-      {showClientManager ? (
-        <ClientManager
-          onClientAdded={(newClient) =>
-            setClients((prev) =>
-              [...prev, newClient].sort((a, b) => a.name.localeCompare(b.name))
-            )
-          }
-        />
-      ) : (
-        <>
-          {clients.length > 0 ? (
-            <form onSubmit={handleAddEntry} className="space-y-4 mb-6">
-              <input
-                type="text"
-                placeholder="Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="number"
-                step="0.1"
-                placeholder="Duration (hrs)"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                className="w-full border p-2 rounded"
-              />
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full border p-2 rounded"
-              />
-              <select
-                value={selectedClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
-                className="w-full border p-2 rounded"
-              >
-                <option value="">Select Client</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                disabled={!isFormValid}
-                className={`bg-blue-600 text-white px-4 py-2 rounded ${
-                  !isFormValid ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
-                }`}
-              >
-                Add Entry
-              </button>
-            </form>
-          ) : (
-            <p className="text-gray-500">
-              You must add a client before logging time entries.
-            </p>
-          )}
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+        >
+          Logout
+        </button>
+      </div>
 
-          {Object.entries(hoursByClient).length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-lg font-bold mb-2">Summary</h3>
-              <div className="space-y-2">
-                {Object.entries(hoursByClient).map(([clientName, total]) => {
-                  const percent = (total / maxHours) * 100;
-                  return (
-                    <div key={clientName} className="flex items-center space-x-4">
-                      <span className="w-32">{clientName}</span>
-                      <div className="flex-1 bg-gray-200 rounded">
-                        <div
-                          className="bg-blue-600 h-4 rounded"
-                          style={{ width: `${percent}%` }}
-                        ></div>
-                      </div>
-                      <span className="w-16 text-right text-gray-700">{total} hrs</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </>
+      {/* Register New User */}
+      {userRole === "MANAGER" && (
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold mb-2">Register New User</h2>
+          <RegisterUserForm />
+        </section>
       )}
+
+      {/* Toggle Client Manager */}
+      <section className="mb-8">
+        <button
+          onClick={() => setShowClientManager(!showClientManager)}
+          className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded"
+        >
+          {showClientManager ? "Hide Client Manager" : "Manage Clients"}
+        </button>
+        {showClientManager && (
+          <ClientManager
+            onClientAdded={(newClient) =>
+              setClients((prev) =>
+                [...prev, newClient].sort((a, b) =>
+                  a.name.localeCompare(b.name)
+                )
+              )
+            }
+          />
+        )}
+      </section>
+
+      {/* Add Time Entry */}
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Add Time Entry</h2>
+        <form onSubmit={handleAddEntry} className="space-y-4">
+          <select
+            required
+            className="w-full p-2 border rounded"
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+          >
+            <option value="">Select Client</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="Task Description"
+            className="w-full p-2 border rounded"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+          <input
+            type="number"
+            step="0.1"
+            placeholder="Hours"
+            className="w-full p-2 border rounded"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            required
+          />
+          <input
+            type="date"
+            className="w-full p-2 border rounded"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+          >
+            Add Entry
+          </button>
+        </form>
+      </section>
+
+      {/* Display Time Entries */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Your Entries</h2>
+        {entries.length === 0 ? (
+          <p className="text-gray-500">No time entries found.</p>
+        ) : (
+          <ul className="space-y-4">
+            {entries.map((entry) => (
+              <li
+                key={entry.id}
+                className="border p-4 rounded bg-white shadow flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-medium">{entry.description}</p>
+                  <p className="text-sm text-gray-500">{entry.date}</p>
+                </div>
+                <div className="text-right text-lg font-semibold">
+                  {entry.duration} hrs
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
 
 export default Dashboard;
-

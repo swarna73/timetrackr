@@ -1,49 +1,42 @@
-import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import WelcomeRegister from "./pages/WelcomeRegister";
+import { useEffect, useState } from "react";
 import axios from "./api/axios";
 
 function App() {
-  const [bootstrapNeeded, setBootstrapNeeded] = useState(null); // null = loading
-  const token = localStorage.getItem("token");
+  const [bootstrapNeeded, setBootstrapNeeded] = useState(false);
+  const [checkedBootstrap, setCheckedBootstrap] = useState(false);
 
   useEffect(() => {
     axios.get("/auth/bootstrap-needed")
       .then((res) => {
         setBootstrapNeeded(res.data);
+        setCheckedBootstrap(true);
       })
       .catch((err) => {
-        console.error("Failed to check bootstrap state", err);
-        setBootstrapNeeded(false); // fallback to normal flow
+        console.error("Failed to check bootstrap status", err);
+        setCheckedBootstrap(true); // fallback
       });
   }, []);
 
-  if (bootstrapNeeded === null) {
-    // Optional: a loading state while we check
-    return <div className="text-center p-4">🔄 Checking setup...</div>;
-  }
+  const token = localStorage.getItem("token");
+
+  if (!checkedBootstrap) return null; // wait until status is checked
 
   return (
     <Router>
       <Routes>
-        {/* 👋 Welcome setup flow */}
-        {bootstrapNeeded && (
-          <Route path="*" element={<WelcomeRegister />} />
-        )}
-
-        {/* 🔒 Authenticated flow */}
-        {!bootstrapNeeded && (
+        {/* 🟡 First time setup */}
+        {bootstrapNeeded ? (
           <>
-            <Route
-              path="/"
-              element={!token ? <LoginPage /> : <Navigate to="/dashboard" />}
-            />
-            <Route
-              path="/dashboard"
-              element={token ? <Dashboard /> : <Navigate to="/" />}
-            />
+            <Route path="*" element={<WelcomeRegister />} />
+          </>
+        ) : (
+          <>
+            <Route path="/" element={!token ? <LoginPage /> : <Navigate to="/dashboard" />} />
+            <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/" />} />
             <Route path="/welcome-register" element={<Navigate to="/" />} />
           </>
         )}

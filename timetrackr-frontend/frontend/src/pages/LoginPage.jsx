@@ -11,36 +11,32 @@ function LoginPage() {
   const [loginError, setLoginError] = useState("");
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginError("");
+  e.preventDefault();
+  setLoginError("");
 
-    try {
-      const res = await axios.post("/auth/login", {
-        email,
-        password,
-      });
+  try {
+    const res = await axios.post("/auth/login", { email, password });
 
-      // ✅ Get token first
-      const token = res.data.token;
+    const token = res.data.token;
+    const decoded = jwtDecode(token);
 
-      // ✅ Decode token
-      const decoded = jwtDecode(token);
+    localStorage.setItem("token", token);
+    localStorage.setItem("userId", res.data.userId);
+    localStorage.setItem("role", decoded.role);
 
-      // ✅ Store values in localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("userId", res.data.userId);
-      localStorage.setItem("role", decoded.role);
-      console.log("Login token:", token);
-console.log("Decoded role:", decoded.role);
-console.log("localStorage token:", localStorage.getItem("token"));
-      // ✅ Navigate to dashboard
-      navigate("/dashboard");
-    } catch (error) {
-      console.error("Login error:", error);
-      setLoginError("LoginPage Invalid email or password");
-    }
-  };
+    console.log("Login successful");
+    console.log("Token:", token);
+    console.log("Decoded:", decoded);
+    console.log("LocalStorage token:", localStorage.getItem("token"));
 
+    // ✅ THIS must happen after setting token
+    navigate("/dashboard");
+window.location.reload(); // ✅ force full reload to re-evaluate token
+  } catch (err) {
+    console.error("Login error:", err);
+    setLoginError("LoginPage Invalid email or password");
+  }
+};
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <form
