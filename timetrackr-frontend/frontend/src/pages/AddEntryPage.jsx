@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "../api/axios";
+import { toast } from "react-toastify";
 
 const AddEntryPage = () => {
   const [clients, setClients] = useState([]);
@@ -33,14 +34,14 @@ const AddEntryPage = () => {
         date,
         userId,
       });
-      alert("Entry added successfully!");
+      toast.success("Entry added successfully!");
       setClientId("");
       setDescription("");
       setDuration("");
       setDate("");
     } catch (err) {
       console.error("Failed to add entry", err);
-      alert("Failed to add entry.");
+toast.error("Failed to add entry. Please try again.");
     }
   };
 

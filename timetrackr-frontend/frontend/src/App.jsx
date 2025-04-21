@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import WelcomeRegister from "./pages/WelcomeRegister";
 import LoginPage from "./pages/LoginPage";
@@ -28,26 +30,28 @@ function App() {
   if (bootstrapNeeded === null) {
     return <div>Loading...</div>;
   }
-
-  return (
-      <Routes>
-        {bootstrapNeeded ? (
-          <>
-            <Route path="/welcome-register" element={<WelcomeRegister />} />
-            <Route path="*" element={<Navigate to="/welcome-register" replace />} />
-          </>
-        ) : (
-          <>
-            <Route path="/" element={<LoginPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/manager-register" element={<RegisterUserForm />} />
-            <Route path="/add-entry" element={<AddEntryPage />} />
-            <Route path="/manage-clients" element={<ClientManager />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </>
-        )}
-      </Routes>
-  );
+return (
+  <>
+    <Routes>
+      {bootstrapNeeded ? (
+        <>
+          <Route path="/welcome-register" element={<WelcomeRegister />} />
+          <Route path="*" element={<Navigate to="/welcome-register" replace />} />
+        </>
+      ) : (
+        <>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/manager-register" element={<RegisterUserForm />} />
+          <Route path="/add-entry" element={<AddEntryPage />} />
+          <Route path="/manage-clients" element={<ClientManager />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </>
+      )}
+    </Routes>
+    <ToastContainer position="top-right" autoClose={3000} />
+  </>
+);
 }
 
 export default App;
