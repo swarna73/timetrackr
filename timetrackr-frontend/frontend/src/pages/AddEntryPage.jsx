@@ -40,9 +40,16 @@ const AddEntryPage = () => {
       setDuration("");
       setDate("");
     } catch (err) {
-      console.error("Failed to add entry", err);
-toast.error("Failed to add entry. Please try again.");
+      if (err.response?.status === 403) {
+      toast.error(
+        err.response.data);
+     }
+      else {
+      console.err("Failed to add entry", err);
+toast.err("Failed to add entry. Please try again.");
     }
+}
+
   };
 
   return (
