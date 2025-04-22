@@ -101,7 +101,7 @@ public class AuthController {
     
     @GetMapping("/bootstrap-needed")
     public ResponseEntity<Boolean> isBootstrapNeeded() {
-        boolean needsBootstrap = !userRepository.existsBy();
+        boolean needsBootstrap = userRepository.count() == 0;
         return ResponseEntity.ok(needsBootstrap);
     }
     

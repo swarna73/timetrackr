@@ -83,6 +83,7 @@ public class SecurityConfig {
         .authorizeHttpRequests()
         .requestMatchers(HttpMethod.POST, "/api/auth/register").hasRole("MANAGER")
         .requestMatchers("/api/clients/**").hasAnyRole("MANAGER", "USER")
+        .requestMatchers(HttpMethod.POST, "/api/time-entries").hasAnyRole("USER", "MANAGER")
         .requestMatchers("/api/time-entries/**").authenticated()
         .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()

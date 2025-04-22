@@ -9,10 +9,15 @@ import com.timetrackr.service.TimeEntryService;
 import com.timetrackr.service.UserService;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
+
+
 
 @RestController
 @RequestMapping("/api/time-entries")
@@ -25,21 +30,57 @@ public class TimeEntryController {
 		this.userService = userService;
 		this.clientService = clientService;
     }
-    @PostMapping
-    public TimeEntry createTimeEntry(@RequestBody TimeEntryRequest entryRequest) {
-        User user = userService.findById(entryRequest.getUserId());
-        Client client = clientService.findById(entryRequest.getClientId()); // ✅ Corrected
+    
+    
+    private boolean isWeekend(LocalDate date) {
+        DayOfWeek d = date.getDayOfWeek();
+        return d == DayOfWeek.SATURDAY || d == DayOfWeek.SUNDAY;
+    }
 
-        TimeEntry entry = new TimeEntry();
-        entry.setDescription(entryRequest.getDescription());
-        entry.setDuration(entryRequest.getDuration());
-        entry.setDate(entryRequest.getDate());
-        entry.setUser(user);
-        entry.setClient(client);
+    private double hoursAlreadyLogged(Long userId, LocalDate date) {
+        return service.getByUserId(userId).stream()
+                .filter(e -> e.getDate().equals(date))
+                .mapToDouble(TimeEntry::getDuration)
+                .sum();
+    }
+    @PostMapping
+    public ResponseEntity<?> createTimeEntry(@RequestBody TimeEntryRequest req) {
+
+        // ── fetch referenced entities ──────────────────────────
+        User   user   = userService.findById(req.getUserId());
+        Client client = clientService.findById(req.getClientId());
         if (client == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid client selected");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                 .body("Invalid client selected");
         }
-        return service.save(entry);
+
+        // ── rule checks ────────────────────────────────────────
+        final int MAX_HOURS      = 8;          // later: read from yml / DB
+        final boolean ALLOW_WE   = false;      // 〃
+
+        if (!ALLOW_WE && isWeekend(req.getDate())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                 .body("Weekend entries are not allowed");
+        }
+
+        double today = hoursAlreadyLogged(user.getId(), req.getDate());
+        if (today + req.getDuration() > MAX_HOURS) {
+        	System.out.println("8 hours exceeded");
+            String msg = "Daily limit (" + MAX_HOURS + " h) exceeded";
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(msg);
+        }
+
+        // ── create & save ──────────────────────────────────────
+        TimeEntry entry = new TimeEntry();
+        entry.setDescription(req.getDescription());
+        entry.setDuration(req.getDuration());
+        entry.setDate       (req.getDate());
+        entry.setUser       (user);
+        entry.setClient     (client);
+        TimeEntry saved = service.save(entry);
+        return ResponseEntity.ok(saved);
+
+        
     }
 
     @GetMapping("/user/{userId}")
