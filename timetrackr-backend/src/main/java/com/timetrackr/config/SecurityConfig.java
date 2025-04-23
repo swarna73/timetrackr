@@ -88,6 +88,7 @@ public class SecurityConfig {
         .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
         .requestMatchers(HttpMethod.POST, "/api/auth/welcome-register").permitAll()
+        .requestMatchers(HttpMethod.GET, "/api/config").authenticated()   // ⬅️ allow all logged-in users
         .anyRequest().denyAll()
         .and()
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // ✅ this is
