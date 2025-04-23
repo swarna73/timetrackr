@@ -65,7 +65,14 @@ function Dashboard() {
     try {
       const res = await axios.get("/config");
       setRules(res.data);
-    } catch (_) {/* ignore – fall back to defaults */}
+    } catch (err){
+ 	const message =
+      err.response?.data ||           // message from the backend
+      err.message ||                  // network or CORS message
+      "Unable to load configuration"; // ultimate fallback
+    toast.error(message);
+}
+
   };
 
   useEffect(() => {
