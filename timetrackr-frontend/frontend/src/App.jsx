@@ -40,15 +40,19 @@ return (
           <Route path="*" element={<Navigate to="/welcome-register" replace />} />
         </>
       ) : (
-        <>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/manager-register" element={<RegisterUserForm />} />
-          <Route path="/add-entry" element={<AddEntryPage />} />
-          <Route path="/manage-clients" element={<ClientManager />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </>
+<>
+  <Route element={<Layout />}>
+    <Route path="/dashboard" element={<Dashboard />} />
+    <Route path="/add-entry" element={<AddEntryPage />} />
+    <Route path="/manage-clients" element={<ClientManager />} />
+    <Route path="/manager-register" element={<RegisterUserForm />} />
+  </Route>
+
+  {/* fallback to login */}
+  <Route path="*" element={<Navigate to="/" replace />} />
+</>
       )}
+
     </Routes>
     <ToastContainer position="top-right" autoClose={3000} />
   </>
