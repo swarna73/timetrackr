@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "../api/axios";
 import { Home } from "lucide-react";
@@ -71,6 +72,8 @@ function Dashboard() {
       err.message ||                  // network or CORS message
       "Unable to load configuration"; // ultimate fallback
     toast.error(message);
+    toast.error(err.response?.data || "Cannot load config");
+
 }
 
   };

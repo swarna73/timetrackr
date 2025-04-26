@@ -20,9 +20,14 @@ function WelcomeRegister() {
         password,
         role: "MANAGER", // ✅ force role as MANAGER for first user
       });
+   // assume backend returns {token, id}
+localStorage.setItem("token", res.data.token);
+localStorage.setItem("userId", res.data.id);
+   localStorage.setItem("role", "MANAGER");
 	console.log("✅ Registered:", res.data);
 	console.log("Navigating to login...");
 navigate("/", { replace: true });
+
 window.location.reload(); // force routing reload
     } catch (err) {
       console.error("❌ Axios error:", err.response?.data || err.message);

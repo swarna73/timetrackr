@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 import axios from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -9,7 +10,6 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
-
   const handleLogin = async (e) => {
   e.preventDefault();
   setLoginError("");
@@ -17,26 +17,23 @@ function LoginPage() {
   try {
     const res = await axios.post("/auth/login", { email, password });
 
-    const token = res.data.token;
-    const decoded = jwtDecode(token);
+    // backend returns { token, userId }
+    const { token, userId } = res.data;
+    const { role }   = jwtDecode(token);
 
-    localStorage.setItem("token", token);
-    localStorage.setItem("userId", res.data.userId);
-    localStorage.setItem("role", decoded.role);
+    localStorage.setItem("token",   token);
+    localStorage.setItem("userId",  userId);
+    localStorage.setItem("role",    role);
 
-    console.log("Login successful");
-    console.log("Token:", token);
-    console.log("Decoded:", decoded);
-    console.log("LocalStorage token:", localStorage.getItem("token"));
-
-    // ✅ THIS must happen after setting token
-    navigate("/dashboard");
-window.location.reload(); // ✅ force full reload to re-evaluate token
+    console.log("Login successful → navigating to dashboard");
+    navigate("/dashboard", { replace: true });
+    window.location.reload();          // ⬅️ force full reload
   } catch (err) {
     console.error("Login error:", err);
-    setLoginError("LoginPage Invalid email or password");
+    setLoginError("Invalid email or password");
   }
 };
+
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <form
